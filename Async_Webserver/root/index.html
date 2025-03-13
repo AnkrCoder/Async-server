@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录/注册</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            padding: 0.5rem 1.5rem;
+            margin: 0 0.5rem;
+            border: none;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        #registerForm {
+            display: none;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .message.error {
+            background-color: #ffe6e6;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .message.success {
+            background-color: #e6ffe6;
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">欢迎</h1>
+
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showForm('login', event)">登录</button>
+            <button class="tab-button" onclick="showForm('register', event)">注册</button>
+        </div>
+
+        <div id="loginMessage" class="message success" style="display: none;"></div>
+        <div id="loginError" class="message error" style="display: none;"></div>
+        <form id="loginForm" action="/login" method="post">
+            <div class="form-group">
+                <label for="loginUsername">用户名</label>
+                <input type="text" id="loginUsername" name="username" required minlength="3" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码</label>
+                <input type="password" id="loginPassword" name="password" required minlength="6">
+            </div>
+            <button type="submit" class="submit-button">登录</button>
+        </form>
+
+        <div id="registerError" class="message error" style="display: none;"></div>
+        <form id="registerForm" action="/register" method="post">
+            <div class="form-group">
+                <label for="registerUsername">用户名</label>
+                <input type="text" id="registerUsername" name="username" required minlength="3" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">密码</label>
+                <input type="password" id="registerPassword" name="password" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">确认密码</label>
+                <input type="password" id="confirmPassword" name="confirm_password" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="tel" id="phone" name="phone" required pattern="[0-9]{11}">
+            </div>
+            <button type="submit" class="submit-button">注册</button>
+        </form>
+    </div>
+
+    <script>
+        // 检查URL参数并显示相应消息
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const success = urlParams.get('success');
+
+            if (error === 'login_failed') {
+                const errorDiv = document.getElementById('loginError');
+                errorDiv.innerText = '登录失败：用户名或密码错误';
+                errorDiv.style.display = 'block';
+                showForm('login');
+            } else if (error === 'registration_failed') {
+                const errorDiv = document.getElementById('registerError');
+                errorDiv.innerText = '注册失败：用户名或手机号已存在';
+                errorDiv.style.display = 'block';
+                showForm('register');
+            } else if (success === 'registration') {
+                const messageDiv = document.getElementById('loginMessage');
+                messageDiv.innerText = '注册成功！请登录';
+                messageDiv.style.display = 'block';
+                showForm('login');
+            }
+
+            // 清除URL参数
+            window.history.replaceState({}, document.title, '/');
+        };
+
+        function showForm(formType, event) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // 如果是通过程序调用，手动设置活动按钮
+                const activeButton = formType === 'login' ? 
+                    document.querySelector('.tab-button:first-child') : 
+                    document.querySelector('.tab-button:last-child');
+                activeButton.classList.add('active');
+            }
+
+            // 清除所有消息
+            document.getElementById('loginMessage').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+
+            // 切换表单显示
+            if (formType === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+
+        // 为注册表单添加密码确认验证
+        document.getElementById('registerForm').addEventListener('submit', function (event) {
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                const errorDiv = document.getElementById('registerError');
+                errorDiv.innerText = '两次输入的密码不一致！';
+                errorDiv.style.display = 'block';
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
